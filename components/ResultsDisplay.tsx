@@ -83,7 +83,7 @@ const ResultsDisplay = () => {
                 </div>
               </div>
               <div 
-                ref={el => resultRefs.current[index] = el}
+                ref={el => { resultRefs.current[index] = el; }}
                 className="bg-dark-secondary/30 p-4"
               >
                 {result.status === 'loading' ? (
