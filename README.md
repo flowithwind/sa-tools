@@ -45,7 +45,20 @@ SA-Tools 是一个专注于**国内云厂商商业化 AI 模型服务 API 横向
 <details>
 <summary>点击展开界面截图</summary>
 
-> 截图待补充
+#### AI Content Review - 多模态内容审核
+![AI Content Review](snapshots/image.png)
+
+#### Image Generation - 图像生成对比
+![Image Generation](snapshots/5e6d7b14-45ec-4b9c-a8fe-e27b458936fd_image.png)
+
+#### Video Generation - 视频生成
+![Video Generation](snapshots/8dacedd3-4f68-4242-8eb7-db5cc50da8b7_image.png)
+
+#### ASR Compare - 语音识别对比
+![ASR Compare](snapshots/c032a94b-b7d7-4480-ae4a-0582be0dcad5_image.png)
+
+#### Vector Embedding - 向量嵌入
+![Vector Embedding](snapshots/f846a410-b390-439e-b276-39f9c22f0585_image.png)
 
 </details>
 
