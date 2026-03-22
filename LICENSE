@@ -1,0 +1,99 @@
+# Source Available License
+
+Copyright (c) 2024-present SA-Tools Contributors
+
+## 许可条款 | License Terms
+
+### 中文版本
+
+本软件及其相关文档（以下简称"软件"）的版权归版权持有人所有。
+
+#### 授予的权利
+
+在遵守本许可证条款的前提下，版权持有人授予您以下非独占、不可转让的权利：
+
+1. **查看和学习**：您可以出于学习和研究目的查看、阅读和分析本软件的源代码。
+
+2. **修改**：您可以修改本软件的源代码以满足您的需求。
+
+3. **个人使用**：您可以将本软件（包括修改后的版本）用于个人、非商业目的。
+
+4. **教育用途**：您可以在教育机构中使用本软件用于教学和学术研究。
+
+5. **分发**：您可以分发本软件的原始版本或修改版本，但必须：
+   - 保留本许可证文件
+   - 明确标注修改内容
+   - 以相同的许可条款分发
+
+#### 限制条款
+
+1. **商业使用限制**：未经版权持有人明确书面授权，您不得将本软件（包括修改后的版本）用于任何商业目的，包括但不限于：
+   - 销售本软件或其衍生作品
+   - 将本软件集成到商业产品或服务中
+   - 使用本软件为第三方提供付费服务
+   - 在商业环境中部署和使用本软件
+
+2. **商标限制**：本许可证不授予您使用版权持有人的商标、服务标识或产品名称的权利。
+
+#### 商业授权
+
+如需将本软件用于商业目的，请联系版权持有人获取商业许可证。
+
+联系方式：
+- 通过 GitHub Issues 提交商业授权申请
+- 或发送邮件至项目维护者
+
+#### 免责声明
+
+本软件按"原样"提供，不提供任何明示或暗示的保证，包括但不限于对适销性、特定用途适用性和非侵权性的保证。在任何情况下，版权持有人均不对任何索赔、损害或其他责任承担责任，无论是在合同诉讼、侵权行为或其他方面，由本软件或本软件的使用或其他交易引起或与之相关。
+
+---
+
+### English Version
+
+Copyright for this software and associated documentation (hereinafter referred to as "Software") is held by the copyright holders.
+
+#### Rights Granted
+
+Subject to the terms of this license, the copyright holders grant you the following non-exclusive, non-transferable rights:
+
+1. **View and Learn**: You may view, read, and analyze the source code of this Software for learning and research purposes.
+
+2. **Modify**: You may modify the source code of this Software to meet your needs.
+
+3. **Personal Use**: You may use this Software (including modified versions) for personal, non-commercial purposes.
+
+4. **Educational Use**: You may use this Software in educational institutions for teaching and academic research.
+
+5. **Distribution**: You may distribute the original or modified versions of this Software, provided that you:
+   - Retain this license file
+   - Clearly indicate any modifications
+   - Distribute under the same license terms
+
+#### Restrictions
+
+1. **Commercial Use Restriction**: Without explicit written authorization from the copyright holders, you may NOT use this Software (including modified versions) for any commercial purpose, including but not limited to:
+   - Selling this Software or derivative works
+   - Integrating this Software into commercial products or services
+   - Using this Software to provide paid services to third parties
+   - Deploying and using this Software in a commercial environment
+
+2. **Trademark Restriction**: This license does not grant you any rights to use the trademarks, service marks, or product names of the copyright holders.
+
+#### Commercial Licensing
+
+To use this Software for commercial purposes, please contact the copyright holders to obtain a commercial license.
+
+Contact:
+- Submit a commercial license request via GitHub Issues
+- Or email the project maintainers
+
+#### Disclaimer
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---
+
+## 许可证版本 | License Version
+
+Version 1.0 - March 2024
