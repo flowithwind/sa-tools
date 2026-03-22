@@ -85,12 +85,17 @@ install_docker() {
         return 0
     fi
     
-    # 添加 Docker 仓库
+    # 移除旧版本（如果有）
+    log_info "移除旧版本 Docker（如果有）..."
+    yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine 2>/dev/null || true
+    
+    # 添加 Docker 仓库（AliOS 4 LTS 使用 CentOS 8 仓库）
     log_info "添加 Docker 仓库..."
     yum-config-manager --add-repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
     
-    # 替换为阿里云镜像
-    sed -i 's+download.docker.com+mirrors.aliyun.com/docker-ce+' /etc/yum.repos.d/docker-ce.repo
+    # 修改仓库配置，强制使用 CentOS 8 版本
+    log_info "配置仓库为 CentOS 8 兼容模式..."
+    sed -i 's/$releasever/8/g' /etc/yum.repos.d/docker-ce.repo
     
     # 安装 Docker
     log_info "安装 Docker Engine..."
