@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  content-review-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: content-review-ai
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      - VOLCANO_ENGINE_API_KEY=${VOLCANO_ENGINE_API_KEY}
+      - VOLCANO_ENGINE_ENDPOINT_ID=${VOLCANO_ENGINE_ENDPOINT_ID}
+      - ALIBABA_CLOUD_ACCESS_KEY_ID=${ALIBABA_CLOUD_ACCESS_KEY_ID}
+      - ALIBABA_CLOUD_ACCESS_KEY_SECRET=${ALIBABA_CLOUD_ACCESS_KEY_SECRET}
+      - OSS_BUCKET=${OSS_BUCKET}
+      - OSS_REGION=${OSS_REGION}
+      - OSS_ENDPOINT=${OSS_ENDPOINT}
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
