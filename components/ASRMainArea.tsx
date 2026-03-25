@@ -148,7 +148,7 @@ export default function ASRMainArea() {
       let time = 0;
       recordingIntervalRef.current = setInterval(() => {
         time += 0.1;
-        if (time >= 60) {
+        if (time >= 300) {
           stopRecording();
           return;
         }
@@ -356,7 +356,7 @@ export default function ASRMainArea() {
                   <span className="text-2xl">🎤</span>
                 </button>
                 <span className="text-sm text-text-muted mt-3">
-                  {audioFile ? '请先清除现有音频' : '点击开始录音（最长 60秒）'}
+                  {audioFile ? '请先清除现有音频' : '点击开始录音（最长 5分钟）'}
                 </span>
               </>
             )}

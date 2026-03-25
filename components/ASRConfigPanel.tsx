@@ -190,7 +190,7 @@ export default function ASRConfigPanel() {
       <div className="text-[10px] text-text-muted border-t border-dark-border pt-4">
         <p className="mb-1">支持格式：MP3, WAV, M4A, OGG</p>
         <p className="mb-1">文件限制：最大 10MB</p>
-        <p>录音时长：最长 60 秒</p>
+        <p>录音时长：最长 5 分钟</p>
       </div>
     </div>
   );
