@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useASRTool } from '@/contexts/ASRToolContext';
 import { ASRResult, AudioFile } from '@/types/models';
+import { convertToMp3AndCompress, getAudioDuration } from '@/utils/audioProcessor';
 
 export default function ASRMainArea() {
   const {
@@ -69,35 +70,57 @@ export default function ASRMainArea() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const file = files[0];
+    const originalFile = files[0];
     
     // Validate file type
     const validTypes = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/wave', 'audio/x-wav', 'audio/m4a', 'audio/x-m4a', 'audio/ogg', 'audio/webm'];
-    if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|m4a|ogg|webm)$/i)) {
+    if (!validTypes.includes(originalFile.type) && !originalFile.name.match(/\.(mp3|wav|m4a|ogg|webm)$/i)) {
       setError('不支持的音频格式，请上传 MP3, WAV, M4A 或 OGG 格式');
       return;
     }
 
-    // Validate file size (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('文件大小超过 10MB 限制');
-      return;
+    // Check audio duration (max 5 minutes = 300 seconds)
+    try {
+      const duration = await getAudioDuration(originalFile);
+      if (duration > 300) {
+        setError('音频时长超过 5 分钟限制，请裁剪后重试');
+        return;
+      }
+    } catch (err) {
+      console.warn('无法读取音频时长:', err);
     }
 
-    const newFile: AudioFile = {
-      id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
-      file,
-      url: '',
-      preview: URL.createObjectURL(file),
-      status: 'pending',
-      source: 'upload',
-    };
+    setIsProcessing(true);
+    setError(null);
 
-    setAudioFile(newFile);
+    try {
+      // Convert to MP3 and compress to ensure file size <= 10MB
+      const processedFile = await convertToMp3AndCompress(originalFile, 10);
+      
+      // Log compression results
+      if (processedFile.size !== originalFile.size) {
+        console.log(`[ASR] 音频处理: ${originalFile.name} (${(originalFile.size / 1024 / 1024).toFixed(2)}MB) -> ${processedFile.name} (${(processedFile.size / 1024 / 1024).toFixed(2)}MB)`);
+      }
 
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      const newFile: AudioFile = {
+        id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        file: processedFile,
+        url: '',
+        preview: URL.createObjectURL(processedFile),
+        status: 'pending',
+        source: 'upload',
+      };
+
+      setAudioFile(newFile);
+    } catch (err) {
+      console.error('音频处理失败:', err);
+      setError('音频文件处理失败，请尝试其他文件');
+    } finally {
+      setIsProcessing(false);
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -122,13 +145,23 @@ export default function ASRMainArea() {
         const mimeType = mediaRecorder.mimeType;
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         const extension = mimeType.includes('webm') ? 'webm' : 'm4a';
-        const file = new File([audioBlob], `recording-${Date.now()}.${extension}`, { type: mimeType });
+        const rawFile = new File([audioBlob], `recording-${Date.now()}.${extension}`, { type: mimeType });
+
+        // Convert recording to MP3 and compress
+        let processedFile: File;
+        try {
+          processedFile = await convertToMp3AndCompress(rawFile, 10);
+          console.log(`[ASR] 录音处理完成: ${(processedFile.size / 1024).toFixed(1)}KB`);
+        } catch (err) {
+          console.error('录音处理失败，使用原始文件:', err);
+          processedFile = rawFile;
+        }
 
         const newFile: AudioFile = {
           id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
-          file,
+          file: processedFile,
           url: '',
-          preview: URL.createObjectURL(audioBlob),
+          preview: URL.createObjectURL(processedFile),
           duration: recordingTime,
           status: 'pending',
           source: 'record',
@@ -316,7 +349,7 @@ export default function ASRMainArea() {
           >
             <span className="text-4xl mb-2">🎵</span>
             <span className="text-sm text-text-muted">点击上传音频文件</span>
-            <span className="text-xs text-text-muted mt-1">MP3, WAV, M4A, OGG (最大 10MB)</span>
+            <span className="text-xs text-text-muted mt-1">MP3, WAV, M4A, OGG (最大 5分钟, 自动压缩)</span>
           </div>
         </div>
 

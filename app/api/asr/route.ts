@@ -8,8 +8,10 @@ const MODEL_CONFIGS: Record<string, {
   endpoint?: string;
 }> = {
   'qwen3-asr-flash': { apiType: 'openai-compat' },
+  'qwen3-asr-flash-filetrans': { apiType: 'dashscope-async' },
   'tingwu-meeting': { apiType: 'tingwu-async' },
   'paraformer-v2': { apiType: 'dashscope-async' },
+  'paraformer-8k-v2': { apiType: 'dashscope-async' },
   'fun-asr': { apiType: 'dashscope-async' },
   'fun-asr-mtl': { apiType: 'dashscope-async' },
 };
@@ -109,8 +111,26 @@ async function callDashScopeSync(audioUrl: string, modelId: string, language?: s
   throw new Error('Unexpected response format from DashScope sync API');
 }
 
-// Call DashScope async API (paraformer, fun-asr)
-async function callDashScopeAsync(audioUrl: string, modelId: string, language?: string) {
+// Call DashScope async API (paraformer, fun-asr, qwen3-asr-flash-filetrans)
+async function callDashScopeAsync(audioUrl: string, modelId: string, language?: string, enableITN?: boolean) {
+  // qwen3-asr-flash-filetrans: file_url (singular), no ITN, no language_hints
+  const isFiletrans = modelId === 'qwen3-asr-flash-filetrans';
+  const input = isFiletrans
+    ? { file_url: audioUrl }
+    : { file_urls: [audioUrl] };
+  const parameters = isFiletrans
+    ? {
+        channel_id: [0],
+        enable_itn: false,
+        enable_words: true,
+      }
+    : {
+        language_hints: language ? [language] : undefined,
+      };
+
+  const requestBody = { model: modelId, input, parameters };
+  console.log(`[ASR] Submitting ${modelId} task, body:`, JSON.stringify(requestBody));
+
   // Submit transcription task
   const submitResponse = await fetch('https://dashscope.aliyuncs.com/api/v1/services/audio/asr/transcription', {
     method: 'POST',
@@ -119,15 +139,7 @@ async function callDashScopeAsync(audioUrl: string, modelId: string, language?: 
       'Content-Type': 'application/json',
       'X-DashScope-Async': 'enable',
     },
-    body: JSON.stringify({
-      model: modelId,
-      input: {
-        file_urls: [audioUrl]
-      },
-      parameters: {
-        language_hints: language ? [language] : undefined,
-      }
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!submitResponse.ok) {
@@ -147,7 +159,8 @@ async function callDashScopeAsync(audioUrl: string, modelId: string, language?: 
   }
 
   // Poll for result
-  const maxAttempts = 60; // Max 60 seconds
+  // filetrans supports up to 12h audio, allow longer polling
+  const maxAttempts = isFiletrans ? 600 : 60;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
 
@@ -155,6 +168,8 @@ async function callDashScopeAsync(audioUrl: string, modelId: string, language?: 
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${DASHSCOPE_API_KEY}`,
+        'X-DashScope-Async': 'enable',
+        'Content-Type': 'application/json',
       },
     });
 
@@ -166,38 +181,61 @@ async function callDashScopeAsync(audioUrl: string, modelId: string, language?: 
     const taskStatus = statusData.output?.task_status;
 
     if (taskStatus === 'SUCCEEDED') {
-      // Get transcription result
-      const transcriptionUrl = statusData.output?.results?.[0]?.transcription_url;
+      const outputJson = JSON.stringify(statusData.output);
+      console.log(`[ASR] Task ${taskId} SUCCEEDED, output (${outputJson.length} chars):`, outputJson.substring(0, 2000));
+
+      // Helper: extract text from transcripts array
+      const extractFromTranscripts = (transcripts: any[]): string => {
+        let text = '';
+        for (const transcript of transcripts) {
+          if (transcript.sentences) {
+            for (const sentence of transcript.sentences) {
+              text += sentence.text || '';
+            }
+          } else if (transcript.text) {
+            text += transcript.text;
+          }
+        }
+        return text;
+      };
+
+      // Path 1: transcripts directly in results[0] or result (filetrans pattern)
+      const resultItem = statusData.output?.results?.[0] || statusData.output?.result;
+      if (resultItem?.transcripts) {
+        const text = extractFromTranscripts(resultItem.transcripts);
+        if (text) return { text, language };
+      }
+
+      // Path 2: transcription_url -> fetch JSON
+      const transcriptionUrl =
+        resultItem?.transcription_url ||
+        statusData.output?.transcription_url;
+
       if (transcriptionUrl) {
+        console.log(`[ASR] Fetching transcription_url:`, transcriptionUrl);
         const transcriptionResponse = await fetch(transcriptionUrl);
         if (transcriptionResponse.ok) {
           const transcriptionData = await transcriptionResponse.json();
-          // Extract text from transcription result
+          console.log(`[ASR] Transcription data keys:`, Object.keys(transcriptionData));
           let fullText = '';
           if (transcriptionData.transcripts) {
-            for (const transcript of transcriptionData.transcripts) {
-              if (transcript.sentences) {
-                for (const sentence of transcript.sentences) {
-                  fullText += sentence.text || '';
-                }
-              } else if (transcript.text) {
-                fullText += transcript.text;
-              }
-            }
+            fullText = extractFromTranscripts(transcriptionData.transcripts);
           }
-          return {
-            text: fullText || '(无识别结果)',
-            language: language,
-          };
+          if (!fullText && transcriptionData.text) {
+            fullText = transcriptionData.text;
+          }
+          if (fullText) return { text: fullText, language };
         }
       }
-      
-      // Fallback: try to get text directly from status response
-      const directText = statusData.output?.results?.[0]?.text;
+
+      // Path 3: direct text in results or output
+      const directText = resultItem?.text || statusData.output?.text;
       if (directText) {
         return { text: directText, language };
       }
-      
+
+      // Last resort: dump raw output for debugging
+      console.error(`[ASR] Cannot extract text from task ${taskId}, full output:`, outputJson);
       return { text: '(无法获取识别结果)', language };
     } else if (taskStatus === 'FAILED') {
       throw new Error(statusData.output?.message || 'Transcription task failed');
@@ -332,7 +370,7 @@ export async function POST(request: NextRequest) {
         result = await callDashScopeSync(audioUrl, modelId, language);
         break;
       case 'dashscope-async':
-        result = await callDashScopeAsync(audioUrl, modelId, language);
+        result = await callDashScopeAsync(audioUrl, modelId, language, enableITN);
         break;
       case 'tingwu-async':
         result = await callTingwuAsync(audioUrl, undefined, language);
