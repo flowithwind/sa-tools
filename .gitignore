@@ -47,6 +47,7 @@ next-env.d.ts
 *.tar
 *.tar.gz
 deploy-package/
+package-lock.json
 
 # Qoder
 .qoder/
