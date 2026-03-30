@@ -490,6 +490,14 @@ export const ASR_MODELS: ASRModel[] = [
     apiType: 'dashscope-async',
     supportedLanguages: ['zh', 'en', 'ja', 'ko', 'de', 'fr', 'ru', 'es', 'it', 'pt'],
   },
+  {
+    id: 'qwen3.5-omni-plus',
+    name: 'Qwen3.5-Omni-Plus',
+    description: '全模态大模型, 支持≤3h音频, 113种语言/方言',
+    provider: 'alibaba',
+    apiType: 'openai-compat',
+    supportedLanguages: ['zh', 'en', 'ja', 'ko', 'de', 'fr', 'ru', 'yue', 'es', 'it', 'pt', 'ar', 'hi', 'id', 'th', 'tr', 'uk', 'vi', 'cs', 'da', 'fi', 'is', 'ms', 'no', 'pl', 'sv', 'fil', 'sichuan', 'minnan', 'wu'],
+  },
 ];
 
 export const ASR_LANGUAGES = [

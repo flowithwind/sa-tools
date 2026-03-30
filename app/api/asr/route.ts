@@ -14,37 +14,57 @@ const MODEL_CONFIGS: Record<string, {
   'paraformer-8k-v2': { apiType: 'dashscope-async' },
   'fun-asr': { apiType: 'dashscope-async' },
   'fun-asr-mtl': { apiType: 'dashscope-async' },
+  'qwen3.5-omni-plus': { apiType: 'openai-compat' },
 };
 
-// Call OpenAI compatible API (qwen3-asr-flash)
+// Call OpenAI compatible API (qwen3-asr-flash, qwen3.5-omni-plus)
 async function callOpenAICompatible(audioUrl: string, modelId: string, language?: string, enableITN?: boolean) {
+  const isOmniModel = modelId.startsWith('qwen3.5-omni') || modelId.startsWith('qwen3-omni');
+  
+  // Omni models: use text prompt for transcription, no asr_options
+  // ASR models: use asr_options, no text prompt
+  const content: any[] = [
+    {
+      type: 'input_audio',
+      input_audio: {
+        data: audioUrl
+      }
+    }
+  ];
+  
+  if (isOmniModel) {
+    content.push({
+      type: 'text',
+      text: '请将这段音频精确转录为文字，只输出转录文本，不要添加任何解释或标点修正说明。'
+    });
+  }
+
+  const requestBody: any = {
+    model: modelId,
+    messages: [
+      {
+        role: 'user',
+        content,
+      }
+    ],
+    stream: false,
+  };
+  
+  // Only add asr_options for dedicated ASR models
+  if (!isOmniModel) {
+    requestBody.asr_options = {
+      language: language || undefined,
+      enable_itn: enableITN !== false,
+    };
+  }
+
   const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${DASHSCOPE_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model: modelId,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'input_audio',
-              input_audio: {
-                data: audioUrl
-              }
-            }
-          ]
-        }
-      ],
-      stream: false,
-      asr_options: {
-        language: language || undefined,
-        enable_itn: enableITN !== false,
-      }
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
